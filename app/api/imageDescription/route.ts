@@ -1,20 +1,54 @@
-// import { generateObject } from 'ai'
-// import { openAI } from '@/app/providers/openAI'
-// import { ingredientSchema, outputSchema } from "@/app/schemas/schemas"
-// import { prompt } from "@/app/constants/constants"
+import { generateObject } from 'ai'
+import { openAI } from '@/app/providers/openAI'
+import { outputSchema } from "@/app/schemas/schemas"
+import { prompt } from "@/app/constants/constants"
 
-
+// POST /imageDescription
 export async function POST(req: Request) {
-  const body = await req.json();
-  console.log('[DEBUG]: POST /chat', body);
-
+  console.log('[DEBUG]: POST /imageDescription');
+  
   try {
-    return null;
-  } catch (error) {
-    console.error(error);
-    return {
+  const body = await req.json();
+
+  const { image, mimeType } = body;
+
+  // Convert the Base64 image string to a data URL
+  const imageUrl = `data:image/png;base64,${image}`;
+  const model = openAI('gpt-4o')
+  
+  // *********************** //
+  // *** openAI endpoint *** //
+  // *********************** //
+  const response = await generateObject({
+    model,
+    output: 'object',
+    schema: outputSchema,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: prompt },
+          { type: 'image', image: imageUrl, mimeType: mimeType,        
+            experimental_providerMetadata: {
+              openai: { imageDetail: 'high' },
+            }, },
+        ],
+      },
+    ],
+    maxTokens: 4096,
+  })
+
+  console.log('[DEBUG]: response.object:', response.object)
+
+  return response.toJsonResponse();
+} catch (error) {
+    console.error('[ERROR]: POST/imageDescription:', error);
+
+    return new Response(JSON.stringify({ error: 'Internal Server Error: please try again later' }), {
       status: 500,
-      body: { error: 'Internal Server Error' },
-    };
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
   }
 }
