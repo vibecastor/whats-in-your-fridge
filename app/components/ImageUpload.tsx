@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import Ingredient from "../types/ingredient";
 import validateBase64 from "../utilities/validateBase64";
-import { set } from "zod";
 
 /** PROPS TYPES */
 interface ImageUploadButtonProps {
@@ -34,6 +33,7 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
       } as unknown as React.FormEvent<HTMLFormElement>;
       handleSubmit(syntheticEvent);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
