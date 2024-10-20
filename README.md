@@ -1,5 +1,41 @@
 # fridge assistant: What's in your fridge?
 
+## Visit the production deployment at [fridge-assistant-sigma.vercel.app](https://fridge-assistant-sigma.vercel.app/)
+
+### Table of Contents
+
+- [fridge assistant: What's in your fridge?](#fridge-assistant-whats-in-your-fridge)
+  - [Description](#description)
+  - [Features](#features)
+- [Architecture](#architecture)
+  - [Tech Stack](#tech-stack)
+  - [Architecture Overview](#architecture-overview)
+- [React Components](#react-components)
+  - [`<ImageUpload />`](#imageupload-)
+    - [Props](#props)
+    - [State](#state)
+    - [Refs](#refs)
+    - [Methods](#methods)
+    - [Workflow](#workflow)
+    - [UI Elements](#ui-elements)
+    - [Example Usage](#example-usage)
+  - [`<FoodGrid />`](#foodgrid-)
+    - [Props](#props-1)
+    - [Interface](#interface)
+    - [Example Usage](#example-usage-1)
+  - [`<FoodItemCard>`](#fooditemcard)
+    - [Props](#props-2)
+    - [Interface](#interface-1)
+    - [Example Usage](#example-usage-2)
+- [API](#api)
+  - [POST /imageDescription](#post-imagedescription)
+    - [Imports](#imports)
+    - [Endpoint](#endpoint)
+    - [About generateObject](#about-generateobject)
+  - [Output](#output)
+  - [Error Handling and Validation](#error-handling-and-validation)
+- [Lessons Learn and Some Limitations](#lessons-learn-and-some-limitations)
+
 ### Description
 
 **fridge assistant** helps users identify food items in their fridge and provides information about each item in a friendly easy to read grid. It is both mobile friendly and easy to use on larger screen sizes.
@@ -8,13 +44,35 @@
 
 1. Upload any image with food items and receive a list of the items from the image.
 
-<img src="./app/assets/upload.png" alt="fridge assistant upload screenshot mobile" width="200">
+<img src="./app/assets/initial-ui-state.png" alt="fridge assistant upload screenshot mobile" width="500">
 
-2. Each food item is displayed in an easy to read card with helpful information about each item including, name, description, quantity, flavors and nutritional information.
+2. After selecting an image, the ui will display a loading state or `processing`.
 
-<img src="./app/assets/fridge-assistant.png" alt="fridge assistant screenshot desktop" width="400">
+<img src="./app/assets/loading-ui-state.png" alt="fridge assistant upload screenshot mobile" width="500">
+
+3. The results are displayed in a grid of food item cards that are responsive to a users screen size making to easy to use on any size device screen.
+
+<img src="./app/assets/results-ui-state.png" alt="fridge assistant screenshot desktop" width="500">
+
+4. Each food item is displayed in an easy to read card with helpful information about each item including, name, description, quantity, flavors and nutritional information.
+
+<img src="./app/assets/card-ui-state.png" alt="fridge assistant screenshot desktop" width="250">
 
 ##
+
+# Architecture
+
+## Tech Stack
+
+- [Next.js](https://nextjs.org/)
+- [Next.js App Router](https://nextjs.org/docs/app)
+- [Vercel-ai-sdk](https://sdk.vercel.ai/)
+- [Open-ai-provider](https://sdk.vercel.ai/providers/ai-sdk-providers/openai)
+- [Vercel](https://vercel.com/products/rendering)
+
+## Architecture Overview
+
+<img src="./app/assets/architecture-diagram.png" alt="fridge assistant screenshot desktop" width="500">
 
 # React Components
 
@@ -113,7 +171,7 @@ interface FoodItemCardProps {
 
 #
 
-## API ROUTE
+## API
 
 ### POST /imageDescription
 
@@ -157,6 +215,7 @@ The `<ImageUpload />` component is designed to handle errors gracefully and will
 
 ## Lessons Learn and Some Limitations
 
-There are probably better models to use for this. In early testing, Clause-Sonnet seemed to provide more consistent results. I choose to go with OpenAI `gpt-4o` in order to streamline the development process. The documentation is good and OpenAI provides a way to get a consistent structured response.
+I acknowledge that there are potentially more suitable models for this application. During initial testing, Anthropic's `claude-3.5-sonnet` demonstrated more consistent results. However, I opted to use OpenAI's `gpt-4o` to streamline the development process, given its comprehensive documentation and ability to provide consistent structured responses. As a next step, if I were to continue development I would consider other models and perhaps do some A/B testing to determine which model is best.
 
-In a real-world scenario, a few ways the application could be optimized would be to do benchmark testing of various models to find a model that is best suited for this purpose. Additionally, asking the model to report back concrete data such as nutritional information seems like a task that could be handed off to a custom dataset that could be built up over time. This might save tokens and improve the latency of the task.
+In a real-world scenario, several optimizations could be implemented. Benchmark testing of various models would help identify the most appropriate model for this specific use case. Additionally, delegating the task of reporting concrete data, such as nutritional information, to a custom dataset could be beneficial. This approach could reduce token usage and improve the task's latency over time.
+In terms of the user interface, I would also love to add some icons or images to each food item card but again, we would need to utilize some datasets in order to match up results to the correct icons or images.
