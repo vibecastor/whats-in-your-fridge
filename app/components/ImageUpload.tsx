@@ -105,14 +105,17 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
         className="flex flex-col items-center"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-5xl py-2">Upload Your Fridge</h2>
-        <h3 className="text-l py-2">
+        <h2 className="text-center text-5xl py-3 align-middle">
+          Upload Your Fridge
+        </h2>
+        <h3 className="text-center text-l py-3">
           Upload a photo of your fridge to get started.
         </h3>
         <label className=" flex justify-center cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 my-3 rounded min-w-48">
           <input
             type="file"
             accept="image/*"
+            capture="environment"
             onChange={handleImageChange}
             ref={fileInputRef}
             className="hidden"

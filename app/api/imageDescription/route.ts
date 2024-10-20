@@ -4,9 +4,7 @@ import { outputSchema } from "@/app/schemas/schemas"
 import { prompt } from "@/app/constants/constants"
 
 // POST /imageDescription
-export async function POST(req: Request) {
-  console.log('[DEBUG]: POST /imageDescription');
-  
+export async function POST(req: Request) {  
   try {
   const body = await req.json();
 
@@ -37,8 +35,6 @@ export async function POST(req: Request) {
     ],
     maxTokens: 4096,
   })
-
-  console.log('[DEBUG]: response.object:', response.object)
 
   return response.toJsonResponse();
 } catch (error) {
