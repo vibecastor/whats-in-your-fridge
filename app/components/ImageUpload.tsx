@@ -9,6 +9,11 @@ interface ImageUploadButtonProps {
   setIngredients: React.Dispatch<React.SetStateAction<Ingredient[]>>;
 }
 
+// Configuration for image compression
+const COMPRESSION_QUALITY = 0.7; // 70% quality
+const MAX_WIDTH = 1200; // Maximum width in pixels
+const MAX_HEIGHT = 1200; // Maximum height in pixels
+
 /** MAIN EXPORT */
 function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
   const formRef = useRef<HTMLFormElement>(null);
@@ -35,6 +40,85 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
+
+  // Compress image to reduce size before processing
+  const compressImage = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const reader = new FileReader();
+
+      reader.onload = (e) => {
+        img.src = e.target?.result as string;
+
+        img.onload = () => {
+          // Calculate new dimensions while maintaining aspect ratio
+          let width = img.width;
+          let height = img.height;
+
+          if (width > MAX_WIDTH) {
+            height = Math.round((height * MAX_WIDTH) / width);
+            width = MAX_WIDTH;
+          }
+
+          if (height > MAX_HEIGHT) {
+            width = Math.round((width * MAX_HEIGHT) / height);
+            height = MAX_HEIGHT;
+          }
+
+          // Create canvas for compression
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw image on canvas
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+
+          // Convert to blob with compression
+          canvas.toBlob(
+            (blob) => {
+              if (!blob) {
+                reject(new Error("Failed to compress image"));
+                return;
+              }
+
+              // Create new file from blob
+              const compressedFile = new File([blob], file.name, {
+                type: "image/jpeg",
+                lastModified: Date.now(),
+              });
+
+              console.log(
+                `Original size: ${(file.size / 1024).toFixed(
+                  2
+                )}KB, Compressed size: ${(compressedFile.size / 1024).toFixed(
+                  2
+                )}KB`
+              );
+              resolve(compressedFile);
+            },
+            "image/jpeg",
+            COMPRESSION_QUALITY
+          );
+        };
+
+        img.onerror = () => {
+          reject(new Error("Failed to load image"));
+        };
+      };
+
+      reader.onerror = () => {
+        reject(new Error("Failed to read file"));
+      };
+
+      reader.readAsDataURL(file);
+    });
+  };
 
   // Helper functions for handleSubmit
   const processImage = (file: File): Promise<string> => {
@@ -90,13 +174,16 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
     setError(undefined);
 
     try {
-      // Step 1: Process the image
-      const base64Image = await processImage(file);
+      // Step 1: Compress the image
+      const compressedFile = await compressImage(file);
 
-      // Step 2: Send to API and get analysis
-      const data = await fetchImageAnalysis(base64Image, file.type);
+      // Step 2: Process the compressed image
+      const base64Image = await processImage(compressedFile);
 
-      // Step 3: Handle the response
+      // Step 3: Send to API and get analysis
+      const data = await fetchImageAnalysis(base64Image, compressedFile.type);
+
+      // Step 4: Handle the response
       if (!data.error) {
         setIngredients(data.ingredients);
       } else {
