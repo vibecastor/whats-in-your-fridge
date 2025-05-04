@@ -10,9 +10,9 @@ interface ImageUploadButtonProps {
 }
 
 // Configuration for image compression
-const COMPRESSION_QUALITY = 0.7; // 70% quality
-const MAX_WIDTH = 1200; // Maximum width in pixels
-const MAX_HEIGHT = 1200; // Maximum height in pixels
+const COMPRESSION_QUALITY = 0.6; // 70% quality
+const MAX_WIDTH = 1000; // Maximum width in pixels
+const MAX_HEIGHT = 1000; // Maximum height in pixels
 
 /** MAIN EXPORT */
 function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
