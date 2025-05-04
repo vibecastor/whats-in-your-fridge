@@ -36,64 +36,80 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [file]);
 
+  // Helper functions for handleSubmit
+  const processImage = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Image = reader.result as string;
+        if (!validateBase64(base64Image)) {
+          reject(new Error("Invalid base64 image"));
+          return;
+        }
+        resolve(base64Image);
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const fetchImageAnalysis = async (base64Image: string, fileType: string) => {
+    const payload = {
+      image: base64Image.split(",")[1],
+      mimeType: fileType,
+    };
+
+    const response = await fetch("/api/imageDescription", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      throw new Error(`API request failed with status ${response.status}`);
+    }
+
+    return await response.json();
+  };
+
+  const resetForm = () => {
+    setFile(undefined);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!file) return;
+
     setIsLoading(true);
+    setError(undefined);
 
     try {
-      if (file) {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onloadend = async () => {
-          const base64Image = reader.result as string;
+      // Step 1: Process the image
+      const base64Image = await processImage(file);
 
-          if (!validateBase64(base64Image)) {
-            setError(
-              "[ERROR]: Something went wrong during image upload.  Please try again."
-            );
-            setIsLoading(false);
-          }
+      // Step 2: Send to API and get analysis
+      const data = await fetchImageAnalysis(base64Image, file.type);
 
-          const payload = {
-            image: base64Image.split(",")[1],
-            mimeType: file.type,
-          };
-
-          // ********************************************** //
-          // *** NEXT API ROUTE: /api/imageDescription  *** //
-          // ********************************************** //
-
-          const response = await fetch("/api/imageDescription", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(payload),
-          });
-
-          const data = await response.json();
-
-          if (!data.error) {
-            setIngredients(data.ingredients);
-          } else {
-            console.error("[ERROR]: Error fetching image description:", data);
-
-            setError(data.error);
-          }
-
-          setFile(undefined);
-
-          if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-          }
-          setIsLoading(false);
-        };
+      // Step 3: Handle the response
+      if (!data.error) {
+        setIngredients(data.ingredients);
+      } else {
+        console.error("[ERROR]: Error fetching image description:", data);
+        setError(data.error);
       }
     } catch (error) {
       console.error("[ERROR]: when submitting imageUpload form:", error);
       setError(
-        "[ERROR]: Something went wrong during image upload.  Please try again."
+        "[ERROR]: Something went wrong during image upload. Please try again."
       );
+    } finally {
+      resetForm();
       setIsLoading(false);
     }
   };
