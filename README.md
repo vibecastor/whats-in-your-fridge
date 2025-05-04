@@ -1,5 +1,7 @@
 # fridge assistant: What's in your fridge?
 
+#### A Next.js web app that uses the OpenAI API with structured responses to identify food items in your fridge and provide detailed nutritional information about each ingredient.
+
 ## Visit the production deployment at [fridge-assistant-sigma.vercel.app](https://fridge-assistant-sigma.vercel.app/)
 
 ### Table of Contents
