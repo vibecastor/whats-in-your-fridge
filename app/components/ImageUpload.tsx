@@ -208,7 +208,7 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
         className="flex flex-col items-center"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-center text-5xl py-3 align-middle">
+        <h2 className="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl py-2 sm:py-3 font-bold">
           Upload Your Fridge
         </h2>
         <h3 className="text-center text-l py-3">
