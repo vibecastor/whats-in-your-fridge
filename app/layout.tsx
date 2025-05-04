@@ -1,22 +1,14 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemeProvider } from "./context/ThemeContext";
 import Header from "./components/Header";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
-});
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
-});
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "fridge assistant",
-  description: "Upload a photo of your fridge to find out what you can cook",
+  title: "Fridge Assistant",
+  description: "An app that helps you identify what's in your fridge",
 };
 
 export default function RootLayout({
@@ -26,11 +18,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <Header />
-        {children}
+      <body className={inter.className}>
+        <ThemeProvider>
+          <Header />
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

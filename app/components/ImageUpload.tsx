@@ -3,10 +3,13 @@
 import { useState, useEffect, useRef, ChangeEvent } from "react";
 import Ingredient from "../types/ingredient";
 import validateBase64 from "../utilities/validateBase64";
+import { Refrigerator } from "lucide-react";
 
 /** PROPS TYPES */
 interface ImageUploadButtonProps {
   setIngredients: React.Dispatch<React.SetStateAction<Ingredient[]>>;
+  setLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  isLoading: boolean;
 }
 
 // Configuration for image compression
@@ -15,11 +18,14 @@ const MAX_WIDTH = 1000; // Maximum width in pixels
 const MAX_HEIGHT = 1000; // Maximum height in pixels
 
 /** MAIN EXPORT */
-function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
+function ImageUpload({
+  setIngredients,
+  setLoading,
+  isLoading,
+}: ImageUploadButtonProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const [file, setFile] = useState<File | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
@@ -170,7 +176,7 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
 
     if (!file) return;
 
-    setIsLoading(true);
+    setLoading(true);
     setError(undefined);
 
     try {
@@ -197,24 +203,25 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
       );
     } finally {
       resetForm();
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-col items-center p-6 border rounded-md shadow-md bg-white">
+    <div className="flex flex-col items-center p-6 border rounded-md shadow-md bg-card-bg border-card-border transition-colors">
       <form
         ref={formRef}
         className="flex flex-col items-center"
         onSubmit={handleSubmit}
       >
-        <h2 className="text-center text-2xl sm:text-3xl md:text-4xl lg:text-5xl py-2 sm:py-3 font-bold">
+        <h2 className="text-center flex items-center justify-center gap-3 text-2xl sm:text-3xl md:text-4xl lg:text-5xl py-2 sm:py-3 font-bold text-orange-600 dark:text-orange-600 transition-colors">
+          <Refrigerator className="w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 text-orange-600 dark:text-orange-600" />
           Upload Your Fridge
         </h2>
-        <h3 className="text-center text-l py-3">
+        <h3 className="text-center text-l py-3 text-foreground opacity-80 transition-colors">
           Upload a photo of your fridge to get started.
         </h3>
-        <label className=" flex justify-center cursor-pointer bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 my-3 rounded min-w-48">
+        <label className="flex justify-center cursor-pointer bg-primary hover:bg-primary-hover text-white font-bold py-3 px-6 my-3 rounded min-w-48 transition duration-200 ease-in-out transform hover:scale-105">
           <input
             type="file"
             accept="image/*"
@@ -222,9 +229,10 @@ function ImageUpload({ setIngredients }: ImageUploadButtonProps) {
             onChange={handleImageChange}
             ref={fileInputRef}
             className="hidden"
+            disabled={isLoading}
           />
           {isLoading && (
-            <svg className="animate-spin h-5 w-5 mr-3 ..." viewBox="0 0 24 24">
+            <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"
                 cx="12"
