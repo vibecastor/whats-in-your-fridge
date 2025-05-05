@@ -13,9 +13,33 @@ interface ImageUploadButtonProps {
 }
 
 // Configuration for image compression
-const COMPRESSION_QUALITY = 0.6; // 70% quality
+const COMPRESSION_QUALITY = 0.6; // 60% quality
 const MAX_WIDTH = 1000; // Maximum width in pixels
 const MAX_HEIGHT = 1000; // Maximum height in pixels
+
+// Custom hook to detect mobile devices
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => {
+      const userAgent =
+        typeof window.navigator === "undefined" ? "" : navigator.userAgent;
+      const mobile = Boolean(
+        userAgent.match(
+          /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
+        )
+      );
+      setIsMobile(mobile);
+    };
+
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
+  return isMobile;
+};
 
 /** MAIN EXPORT */
 function ImageUpload({
@@ -27,11 +51,38 @@ function ImageUpload({
   const [file, setFile] = useState<File | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const isMobile = useIsMobile();
 
+  // Add a helper function to check if file is HEIC format
+  const isHeicFormat = (file: File): boolean => {
+    return (
+      file.type === "image/heic" ||
+      file.type === "image/heif" ||
+      file.name.toLowerCase().endsWith(".heic") ||
+      file.name.toLowerCase().endsWith(".heif")
+    );
+  };
+
+  // Update the handleImageChange function
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
 
     if (file) {
+      // Log file info for debugging
+      console.log("File type:", file.type, "File name:", file.name);
+
+      if (isHeicFormat(file)) {
+        setError(
+          "HEIC/HEIF images are not supported by browsers. Please use JPEG/PNG format or take a photo directly with the camera."
+        );
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        return;
+      }
+
+      // Clear any previous errors
+      setError(undefined);
       setFile(file);
     }
   };
@@ -171,10 +222,32 @@ function ImageUpload({
     }
   };
 
+  // Add a helper to validate supported image types
+  const isSupportedImageType = (file: File): boolean => {
+    const supportedTypes = [
+      "image/jpeg",
+      "image/jpg",
+      "image/png",
+      "image/webp",
+      "image/gif",
+    ];
+
+    return supportedTypes.includes(file.type.toLowerCase());
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (!file) return;
+
+    // Double-check file type before proceeding
+    if (!isSupportedImageType(file)) {
+      setError(
+        "Unsupported image format. Please use JPEG, PNG, WebP, or GIF formats."
+      );
+      resetForm();
+      return;
+    }
 
     setLoading(true);
     setError(undefined);
@@ -221,17 +294,9 @@ function ImageUpload({
         <h3 className="text-center text-l py-3 text-foreground opacity-80 transition-colors">
           Upload a photo of your fridge to get started.
         </h3>
-        <label className="flex justify-center cursor-pointer bg-primary hover:bg-primary-hover text-white font-bold py-3 px-6 my-3 rounded min-w-48 transition duration-200 ease-in-out transform hover:scale-105">
-          <input
-            type="file"
-            accept="image/*"
-            capture="environment"
-            onChange={handleImageChange}
-            ref={fileInputRef}
-            className="hidden"
-            disabled={isLoading}
-          />
-          {isLoading && (
+
+        {isLoading ? (
+          <div className="flex items-center justify-center bg-primary text-white font-bold py-3 px-6 my-3 rounded min-w-48">
             <svg className="animate-spin h-5 w-5 mr-3" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"
@@ -247,10 +312,41 @@ function ImageUpload({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-          )}
-          {isLoading ? "Processing" : "Upload Image"}
-        </label>
-        <p className="text-red-700">{error}</p>
+            Processing
+          </div>
+        ) : (
+          <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+            {/* Camera button - only shown on mobile */}
+            {isMobile && (
+              <label className="flex justify-center cursor-pointer bg-primary hover:bg-primary-hover text-white font-bold py-3 px-6 rounded transition duration-200 ease-in-out transform hover:scale-105">
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  disabled={isLoading}
+                />
+                Take Photo
+              </label>
+            )}
+
+            {/* Gallery button */}
+            <label className="flex justify-center cursor-pointer bg-card-border hover:bg-gray-300 dark:hover:bg-gray-600 text-foreground font-bold py-3 px-6 rounded transition duration-200 ease-in-out transform hover:scale-105">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleImageChange}
+                ref={fileInputRef}
+                className="hidden"
+                disabled={isLoading}
+              />
+              Choose Image
+            </label>
+          </div>
+        )}
+
+        <p className="text-red-700 mt-3">{error}</p>
       </form>
     </div>
   );
